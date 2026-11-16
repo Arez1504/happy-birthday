@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Món Quà Bí Mật Dành Cho Bạn 🎂</title>
+    <!-- Nhúng Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Nhúng Google Fonts hỗ trợ tiếng Việt đẹp mắt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Quicksand:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Thư viện html2canvas để chụp ảnh tấm thiệp lưu về máy -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Thư viện canvas-confetti cho hiệu ứng pháo giấy rực rỡ -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #fff5f5 0%, #fee2e2 50%, #fecaca 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            margin: 0;
+        }
+
+        .font-handwriting {
+            font-family: 'Dancing Script', cursive;
+        }
+
+        /* =====================================================================
+           KHẮC PHỤC LỖI DÍNH CHỮ TRÊN ĐIỆN THOẠI KHI XUẤT ẢNH (HTML2CANVAS)
+           - Khi xuất ảnh trên mobile, Safari/WebKit & Chrome thu gọn khoảng trắng nếu
+             letter-spacing = normal (0).
+           - Cố định letter-spacing & word-spacing trên toàn bộ thiệp giúp html2canvas
+             tính đúng toạ độ pixel của từng từ và dấu cách.
+           ===================================================================== */
+        #printableCard,
+        #printableCard * {
+            letter-spacing: 0.025em;
+            word-spacing: 1.2px;
+        }
+
+        #printableCard .font-handwriting {
+            letter-spacing: 0.02em;
+            word-spacing: 2px;
+        }
+
+        /* Hiệu ứng rung lắc khi nhập sai mật khẩu */
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20%,
+            60% {
+                transform: translateX(-8px);
+            }
+
+            40%,
+            80% {
+                transform: translateX(8px);
+            }
+        }
+
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* Hiệu ứng bay lên của phong bì từ dưới màn hình */
+        @keyframes flyIn {
+            0% {
+                opacity: 0;
+                transform: translateY(120vh) scale(0.6) rotate(-8deg);
+            }
+
+            70% {
+                opacity: 1;
+                transform: translateY(-15px) scale(1.03) rotate(2deg);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1) rotate(0deg);
+            }
+        }
+
+        .animate-fly-in {
+            animation: flyIn 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        /* Cấu trúc Phong bì 3D màu đỏ sang trọng */
+        .envelope-wrapper {
+            position: relative;
+            width: 320px;
+            height: 220px;
+            margin: 0 auto;
+            perspective: 1000px;
+        }
+
+        @media (min-width: 640px) {
+            .envelope-wrapper {
+                width: 380px;
+                height: 250px;
+            }
+        }
+
+        /* Mặt sau phong bì đỏ */
+        .envelope-back {
+            position: absolute;
+            inset: 0;
+            background: #991b1b;
+            border-radius: 12px;
+            box-shadow: 0 20px 35px rgba(153, 27, 27, 0.35);
+            z-index: 1;
+        }
+
+        /* Nắp phong bì trên (lật mở 3D) */
+        .envelope-flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 55%;
+            background: #dc2626;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+            transform-origin: top center;
+            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), z-index 0.2s;
+            z-index: 4;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+
+        .envelope-wrapper.open .envelope-flap {
+            transform: rotateX(180deg);
+            z-index: 1;
+        }
+
+        /* Con dấu sáp trái tim màu vàng kim trên nắp phong bì */
+        .wax-seal {
+            position: absolute;
+            top: 46%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 48px;
+            height: 48px;
+            background: radial-gradient(circle at 30% 30%, #fde047, #d97706);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 5;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            border: 2px solid #fef08a;
+        }
+
+        .envelope-wrapper.open .wax-seal {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.5);
+            pointer-events: none;
+        }
+
+        /* Thân túi phong bì phía trước */
+        .envelope-front {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .envelope-front::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            clip-path: polygon(0 0, 50% 52%, 100% 0, 100% 100%, 0 100%);
+        }
+
+        .envelope-front::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, #b91c1c 0%, #ef4444 100%);
+            clip-path: polygon(0 100%, 50% 48%, 100% 100%);
+        }
+
+        /* Tấm thiệp thu nhỏ trượt lên bên trong phong bì */
+        .letter-peek {
+            position: absolute;
+            left: 7%;
+            right: 7%;
+            bottom: 8px;
+            height: 85%;
+            background: #fffdf9;
+            border-radius: 8px;
+            z-index: 2;
+            transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1.5px dashed #dc2626;
+        }
+
+        .envelope-wrapper.open .letter-peek {
+            transform: translateY(-95px);
+        }
+
+        /* Tấm thiệp phóng to giữa màn hình */
+        @keyframes cardExpand {
+            0% {
+                opacity: 0;
+                transform: scale(0.75) translateY(30px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .animate-card-expand {
+            animation: cardExpand 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        /* =====================================================================
+           CÁC KIỂU GIAO DIỆN THIỆP ĐỎ (ĐỎ HOÀNG GIA & ĐỎ TRUYỀN THỐNG)
+           ===================================================================== */
+        /* KIỂU 1: ĐỎ HOÀNG GIA (LUXURY RED & GOLD - MẶC ĐỊNH) */
+        .theme-luxury {
+            background-color: #991b1b;
+            background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 40%, #b91c1c 70%, #7f1d1d 100%);
+            background-image: radial-gradient(rgba(253, 224, 71, 0.28) 1.2px, transparent 1.2px);
+            background-size: 22px 22px;
+            border-color: #fde047 !important;
+            box-shadow: 0 25px 50px -12px rgba(127, 29, 29, 0.6);
+        }
+
+        .theme-luxury .inner-frame {
+            border-color: #fde047;
+            background-color: rgba(0, 0, 0, 0.25);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-luxury .flower-decor {
+            color: #fde047;
+        }
+
+        .theme-luxury .card-title {
+            color: #fde047;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+        }
+
+        .theme-luxury .card-recipient {
+            color: #fef08a;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .theme-luxury .card-divider-line {
+            background-color: rgba(253, 224, 71, 0.4);
+        }
+
+        .theme-luxury .card-divider-heart {
+            color: #fde047;
+        }
+
+        .theme-luxury .card-message-text {
+            color: #ffffff;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .theme-luxury .card-sender-label {
+            color: rgba(254, 240, 138, 0.85);
+        }
+
+        .theme-luxury .card-sender-name {
+            color: #fde047;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+        }
+
+        .theme-luxury .cake-badge,
+        .theme-luxury .photo-badge-wrapper {
+            background: linear-gradient(to bottom, #fef9c3, #fde047);
+            border-color: #facc15;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .theme-luxury .photo-frame-border {
+            border-color: #fde047;
+            background-color: rgba(0, 0, 0, 0.35);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        }
+
+        /* KIỂU 2: ĐỎ TRUYỀN THỐNG (NỀN KEM VIỀN ĐỎ) */
+        .theme-classic {
+            background-color: #fffcf7;
+            background-image: radial-gradient(#fca5a5 1.2px, transparent 1.2px);
+            background-size: 20px 20px;
+            border-color: #dc2626 !important;
+            box-shadow: 0 25px 50px -12px rgba(220, 38, 38, 0.25);
+        }
+
+        .theme-classic .inner-frame {
+            border-color: #ef4444;
+            background-color: rgba(255, 255, 255, 0.92);
+        }
+
+        .theme-classic .flower-decor {
+            color: #ef4444;
+        }
+
+        .theme-classic .card-title {
+            color: #dc2626;
+            text-shadow: none;
+        }
+
+        .theme-classic .card-recipient {
+            color: #b91c1c;
+            text-shadow: none;
+        }
+
+        .theme-classic .card-divider-line {
+            background-color: #fecaca;
+        }
+
+        .theme-classic .card-divider-heart {
+            color: #ef4444;
+        }
+
+        .theme-classic .card-message-text {
+            color: #374151;
+            text-shadow: none;
+        }
+
+        .theme-classic .card-sender-label {
+            color: #9ca3af;
+        }
+
+        .theme-classic .card-sender-name {
+            color: #dc2626;
+            text-shadow: none;
+        }
+
+        .theme-classic .cake-badge,
+        .theme-classic .photo-badge-wrapper {
+            background: linear-gradient(to bottom, #fef2f2, #fee2e2);
+            border-color: #fca5a5;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
+        }
+
+        .theme-classic .photo-frame-border {
+            border-color: #ef4444;
+            background-color: #ffffff;
+            box-shadow: 0 8px 24px rgba(220, 38, 38, 0.15);
+        }
+
+        /* Bong bóng bay trang trí nền */
+        .floating-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(55px);
+            z-index: 0;
+            opacity: 0.55;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body class="flex items-center justify-center p-4 relative selection:bg-red-200 selection:text-red-900">
+
+    <!-- Input ẩn chọn file ảnh từ máy hoặc điện thoại -->
+    <input type="file" id="photoInput" accept="image/*" class="hidden">
+
+    <!-- Các đốm màu ấm áp trang trí nền -->
+    <div class="floating-blob w-72 h-72 bg-red-400 top-[-40px] left-[-40px]"></div>
+    <div class="floating-blob w-80 h-80 bg-amber-300 bottom-[-50px] right-[-30px]"></div>
+    <div class="floating-blob w-60 h-60 bg-rose-400 top-1/2 left-1/3"></div>
+
+    <!-- =====================================================================
+         PHẦN 1: MÀN HÌNH KHÓA MẬT KHẨU (LOCK SCREEN)
+         ===================================================================== -->
+    <main id="lockScreen" class="relative z-10 w-full max-w-md transition-all duration-500">
+        <div id="lockCard"
+            class="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-red-100 p-7 sm:p-9 text-center">
+            <!-- Biểu tượng hộp quà màu đỏ hoàng gia -->
+            <div
+                class="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gradient-to-tr from-red-600 via-rose-600 to-amber-500 flex items-center justify-center shadow-lg shadow-red-200 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7">
+                    </path>
+                </svg>
+            </div>
+
+            <h1 class="font-handwriting text-4xl sm:text-5xl text-red-600 font-bold mb-2">
+                Món Quà Bí Mật
+            </h1>
+            <p class="text-gray-600 text-sm sm:text-base mb-6">
+                Có một tấm thiệp đỏ đặc biệt đang chờ bạn bên trong. Hãy nhập mật mã để mở nhé!
+            </p>
+
+            <!-- Form nhập mật khẩu -->
+            <div class="space-y-4">
+                <div class="relative">
+                    <input type="password" id="passwordInput" placeholder="Nhập mật khẩu tại đây..." autocomplete="off"
+                        class="w-full px-5 py-3.5 rounded-2xl bg-red-50/80 border-2 border-red-200 text-center text-red-950 font-semibold text-lg tracking-widest placeholder:tracking-normal placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:border-red-500 focus:bg-white transition-all">
+                </div>
+
+                <!-- Thông báo lỗi khi nhập sai -->
+                <p id="errorMsg" class="text-red-500 text-sm font-medium hidden">
+                    Mật khẩu chưa đúng rồi, thử lại nhé! 🙈
+                </p>
+
+                <button id="unlockBtn" type="button"
+                    class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-700 hover:to-rose-700 active:scale-[0.98] text-white font-bold text-base sm:text-lg shadow-lg shadow-red-200 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                    <span>Mở Thiệp Ngay</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Dòng gợi ý mật khẩu demo -->
+            <div class="mt-6 pt-4 border-t border-red-100">
+                <p class="text-xs text-gray-400">
+                    💡 Gợi ý mật khẩu demo: <span
+                        class="font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-100">1234</span>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- =====================================================================
+         PHẦN 2: SÂN KHẤU PHONG BÌ 3D BAY RA & MỞ NẮP
+         ===================================================================== -->
+    <section id="envelopeStage" class="hidden relative z-10 w-full max-w-lg text-center py-8">
+        <p id="stageStatusText" class="text-red-600 font-semibold text-lg mb-8 animate-pulse">
+            Đang mở món quà dành riêng cho bạn... ✨
+        </p>
+
+        <div id="envelopeBox" class="envelope-wrapper">
+            <!-- Mặt sau phong bì đỏ đô -->
+            <div class="envelope-back"></div>
+
+            <!-- Tấm thiệp ló lên bên trong -->
+            <div class="letter-peek">
+                <span class="text-2xl mb-1">🎂</span>
+                <p class="font-handwriting text-xl text-red-600 font-bold tracking-wide">Chúc Mừng Sinh Nhật!</p>
+            </div>
+
+            <!-- Thân phong bì mặt trước -->
+            <div class="envelope-front"></div>
+
+            <!-- Nắp phong bì đỏ tươi -->
+            <div class="envelope-flap"></div>
+
+            <!-- Con dấu sáp vàng kim sang trọng -->
+            <div class="wax-seal">
+                <svg class="w-5 h-5 text-white drop-shadow" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                        d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                        clip-rule="evenodd"></path>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- =====================================================================
+         PHẦN 3: TẤM THIỆP SINH NHẬT HOÀN CHỈNH & CÁC NÚT TIỆN ÍCH
+         ===================================================================== -->
+    <section id="cardStage" class="hidden relative z-10 w-full max-w-xl my-6">
+
+        <!-- KHUNG TẤM THIỆP SẼ ĐƯỢC CHỤP LẠI KHI BẤM "TẢI ẢNH THIỆP VỀ MÁY" -->
+        <div id="printableCard"
+            class="theme-luxury rounded-3xl p-4 sm:p-6 shadow-2xl border-4 relative overflow-hidden transition-all duration-300">
+            <!-- Viền khung trang trí kép bên trong -->
+            <div
+                class="inner-frame border-2 border-dashed rounded-2xl p-6 sm:p-9 relative transition-colors duration-300">
+
+                <!-- Hoa văn 4 góc trang trí -->
+                <div class="flower-decor absolute top-3 left-3 text-xl select-none transition-colors">✿</div>
+                <div class="flower-decor absolute top-3 right-3 text-xl select-none transition-colors">✿</div>
+                <div class="flower-decor absolute bottom-3 left-3 text-xl select-none transition-colors">✿</div>
+                <div class="flower-decor absolute bottom-3 right-3 text-xl select-none transition-colors">✿</div>
+
+                <!-- =======================================================
+                     KHU VỰC ẢNH ĐẠI DIỆN / BÁNH SINH NHẬT TRÒN
+                     - Bấm vào khung tròn để chọn hoặc đổi ảnh từ máy/điện thoại
+                     ======================================================= -->
+                <div id="avatarPhotoContainer" class="relative w-24 h-24 mx-auto mb-4 cursor-pointer group"
+                    title="Chạm vào đây để chọn hoặc đổi ảnh đại diện">
+
+                    <!-- Trạng thái 1: Icon Bánh sinh nhật SVG (Hiện khi chưa có ảnh) -->
+                    <div id="cakeBadge"
+                        class="cake-badge w-24 h-24 mx-auto rounded-full flex items-center justify-center border-2 transition-all duration-300 group-hover:scale-105">
+                        <svg class="w-14 h-14" viewBox="0 0 64 64" fill="none">
+                            <rect x="10" y="38" width="44" height="16" rx="4" fill="#dc2626" />
+                            <rect x="14" y="26" width="36" height="12" rx="3" fill="#ef4444" />
+                            <path
+                                d="M10 40C14 44 18 38 22 42C26 46 30 38 34 42C38 46 42 38 46 42C50 45 52 40 54 40V38H10V40Z"
+                                fill="#FFFDF9" />
+                            <rect x="23" y="15" width="4" height="11" rx="1.5" fill="#FFD54F" />
+                            <rect x="37" y="15" width="4" height="11" rx="1.5" fill="#f59e0b" />
+                            <path
+                                d="M25 7C25 7 22 10.5 22 12.5C22 14.1569 23.3431 15.5 25 15.5C26.6569 15.5 28 14.1569 28 12.5C28 10.5 25 7 25 7Z"
+                                fill="#FF7043" />
+                            <path
+                                d="M39 7C39 7 36 10.5 36 12.5C36 14.1569 37.3431 15.5 39 15.5C40.6569 15.5 42 14.1569 42 12.5C42 10.5 39 7 39 7Z"
+                                fill="#FF7043" />
+                        </svg>
+                    </div>
+
+                    <!-- Trạng thái 2: Ảnh tròn chân dung kỷ niệm (Hiện khi đã chọn ảnh kiểu avatar) -->
+                    <div id="avatarPhotoWrapper"
+                        class="hidden photo-badge-wrapper w-24 h-24 mx-auto rounded-full overflow-hidden border-2 shadow-lg relative group-hover:scale-105 transition-all duration-300">
+                        <img id="avatarPhotoImg" src="" alt="Ảnh kỷ niệm sinh nhật" class="w-full h-full object-cover">
+                    </div>
+
+                    <!-- Huy hiệu máy ảnh nhỏ ở góc (Gợi ý người dùng bấm chọn ảnh - Tự động ẩn khi xuất file ảnh) -->
+                    <div
+                        class="no-export absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center text-xs shadow-md border-2 border-white select-none transition-transform group-hover:scale-110">
+                        📷
+                    </div>
+                </div>
+
+                <!-- Tiêu đề chính của thiệp (luôn có tracking-wide chống dính chữ) -->
+                <h2
+                    class="card-title font-handwriting text-4xl sm:text-5xl font-bold text-center mb-3 leading-tight tracking-wide transition-colors">
+                    Chúc Mừng Sinh Nhật!
+                </h2>
+
+                <!-- Tên người nhận (tracking-wide chống dính chữ) -->
+                <p id="cardRecipient"
+                    class="card-recipient text-center font-bold text-base sm:text-lg mb-5 tracking-wide transition-colors">
+                    Gửi bạn thân mến,
+                </p>
+
+                <!-- =======================================================
+                     KHUNG ẢNH KỶ NIỆM (HIỆN KHI CHỌN KIỂU KHUNG ẢNH POLAROID)
+                     ======================================================= -->
+                <div id="framePhotoContainer"
+                    class="hidden my-5 mx-auto max-w-xs sm:max-w-sm rounded-2xl overflow-hidden photo-frame-border border-2 p-2 relative shadow-xl group cursor-pointer transition-all duration-300"
+                    title="Bấm vào để đổi ảnh khác">
+                    <div class="rounded-xl overflow-hidden max-h-60 flex items-center justify-center bg-black/10">
+                        <img id="framePhotoImg" src="" alt="Ảnh kỷ niệm sinh nhật"
+                            class="w-full h-auto max-h-60 object-cover rounded-lg shadow-inner">
+                    </div>
+                    <!-- Badge đổi ảnh ở góc khung ảnh (Ẩn khi xuất file) -->
+                    <div
+                        class="no-export absolute top-3 right-3 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-xs text-white text-xs flex items-center gap-1 shadow">
+                        <span>📷</span>
+                        <span>Đổi ảnh</span>
+                    </div>
+                </div>
+
+                <!-- Đường kẻ phân cách nhẹ nhàng -->
+                <div class="flex items-center justify-center gap-2 mb-5">
+                    <span class="card-divider-line h-[1px] w-12 transition-colors"></span>
+                    <span class="card-divider-heart text-xs transition-colors">♥</span>
+                    <span class="card-divider-line h-[1px] w-12 transition-colors"></span>
+                </div>
+
+                <!-- Nội dung lời chúc (Các đoạn văn sẽ tự động có tracking-wide chống dính chữ) -->
+                <div id="cardMessage"
+                    class="card-message-text text-sm sm:text-base leading-relaxed space-y-3 text-center font-medium px-1 sm:px-4 tracking-wide transition-colors">
+                    <!-- Nội dung lời chúc hiển thị tại đây -->
+                </div>
+
+                <!-- Chữ ký người gửi (tracking-wide chống dính chữ) -->
+                <div class="mt-7 pt-4 text-right pr-2 sm:pr-4">
+                    <p class="card-sender-label text-xs uppercase tracking-wider mb-1 transition-colors">Thân thương,
+                    </p>
+                    <p id="cardSender"
+                        class="card-sender-name font-handwriting text-2xl sm:text-3xl font-bold tracking-wide transition-colors">
+                        Người bạn luôn quý mến bạn ✨
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CÁC NÚT TIỆN ÍCH PHÍA DƯỚI TẤM THIỆP -->
+        <div id="actionButtons" class="mt-6 flex flex-wrap items-center justify-center gap-3 px-2">
+            <!-- Nút tải ảnh thiệp -->
+            <button id="downloadBtn" type="button"
+                class="w-full sm:w-auto py-3 px-6 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-700 hover:to-rose-700 active:scale-[0.98] text-white font-bold text-sm sm:text-base shadow-lg shadow-red-200 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                <span id="downloadBtnText">Tải ảnh thiệp về máy</span>
+            </button>
+
+            <!-- Nút chọn hoặc đổi ảnh từ máy tính/điện thoại -->
+            <button id="choosePhotoBtn" type="button"
+                class="w-full sm:w-auto py-3 px-4 rounded-2xl bg-white/95 hover:bg-white active:scale-[0.98] text-red-600 border border-red-200 font-bold text-sm sm:text-base shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer">
+                <span class="text-base">📸</span>
+                <span id="choosePhotoText">Chọn ảnh từ máy</span>
+            </button>
+
+            <!-- Nút đổi kiểu hiển thị ảnh (Tròn Avatar ⇄ Khung chữ nhật) - Chỉ hiện khi đã có ảnh -->
+            <button id="photoLayoutBtn" type="button"
+                class="hidden w-full sm:w-auto py-3 px-4 rounded-2xl bg-white/95 hover:bg-white active:scale-[0.98] text-red-600 border border-red-200 font-bold text-sm sm:text-base shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer">
+                <span class="text-base">🖼️</span>
+                <span id="photoLayoutText">Đổi sang Khung ảnh</span>
+            </button>
+
+            <!-- Nút xoá ảnh về icon bánh kem - Chỉ hiện khi đã có ảnh -->
+            <button id="removePhotoBtn" type="button"
+                class="hidden w-full sm:w-auto py-3 px-3.5 rounded-2xl bg-red-50 hover:bg-red-100 active:scale-[0.98] text-red-600 border border-red-200 font-bold text-sm sm:text-base shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                title="Gỡ ảnh và khôi phục icon bánh kem">
+                <span>✕</span>
+                <span>Bỏ ảnh</span>
+            </button>
+
+            <!-- Nút đổi kiểu màu thiệp đỏ (Đỏ Hoàng Gia ⇄ Đỏ Nền Kem) -->
+            <button id="themeToggleBtn" type="button"
+                class="w-full sm:w-auto py-3 px-4 rounded-2xl bg-white/95 hover:bg-white active:scale-[0.98] text-red-600 border border-red-200 font-bold text-sm sm:text-base shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer">
+                <span class="text-base">🎨</span>
+                <span id="themeToggleText">Đổi sang Nền Kem</span>
+            </button>
+
+            <!-- Nút xem lại hiệu ứng mở thiệp -->
+            <button id="replayBtn" type="button"
+                class="w-full sm:w-auto py-3 px-4 rounded-2xl bg-white/95 hover:bg-white active:scale-[0.98] text-red-600 border border-red-200 font-bold text-sm sm:text-base shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                    </path>
+                </svg>
+                <span>Xem lại hiệu ứng</span>
+            </button>
+        </div>
+
+        <!-- Thông báo trạng thái tải ảnh -->
+        <p id="toastMsg"
+            class="text-center text-sm font-semibold text-red-600 mt-3 opacity-0 transition-opacity duration-300">
+            Đã tạo ảnh thiệp thành công! 🎉
+        </p>
+    </section>
+
+    <!-- =====================================================================
+         POPUP XEM TRƯỚC VÀ LƯU ẢNH (GIÚP ĐIỆN THOẠI IPHONE / ANDROID LƯU DỄ DÀNG)
+         ===================================================================== -->
+    <div id="imageModal"
+        class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-5 text-center shadow-2xl relative animate-card-expand">
+            <button id="closeModalBtn" type="button"
+                class="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center text-lg font-bold transition-colors">
+                ✕
+            </button>
+            <h3 class="text-red-600 font-bold text-lg mb-1">Ảnh Thiệp Của Bạn 🎂</h3>
+            <p class="text-xs text-gray-500 mb-3">
+                Nếu điện thoại chưa tự lưu vào Bộ sưu tập, bạn hãy <b>nhấn giữ vào ảnh</b> bên dưới và chọn <b>"Lưu hình
+                    ảnh"</b> nhé!
+            </p>
+            <div
+                class="max-h-[60vh] overflow-y-auto rounded-2xl border border-red-100 shadow-inner mb-4 bg-gray-50 flex items-center justify-center p-1">
+                <img id="previewImage" src="" alt="Ảnh thiệp sinh nhật" class="w-full h-auto rounded-xl shadow">
+            </div>
+            <div class="flex gap-2">
+                <a id="modalDownloadLink" href="#" download="thiep-sinh-nhat.png"
+                    class="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold text-sm shadow-md flex items-center justify-center gap-1.5 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    <span>Tải lại ảnh</span>
+                </a>
+                <button id="closeModalBtn2" type="button"
+                    class="py-2.5 px-4 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm transition-colors">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         PHẦN MÃ JAVASCRIPT ĐIỀU KHIỂN & CẤU HÌNH NỘI DUNG
+         ===================================================================== -->
+    <script>
+        /**
+         * =================================================================
+         * KHU VỰC TÙY CHỈNH NỘI DUNG THIỆP CỦA BẠN (SỬA TẠI ĐÂY)
+         * =================================================================
+         */
+        const CARD_CONFIG = {
+            // 1. Mật khẩu để mở thiệp (Bạn có thể đổi thành ngày sinh, ví dụ: "1508" hoặc "sinhnhatvuive")
+            password: "1234",
+
+            // 2. Tên người nhận hiển thị trên đầu thiệp
+            recipient: "Gửi bạn thân mến,",
+
+            // 3. Ảnh kỷ niệm chèn vào thiệp (TÙY CHỌN):
+            // - Bạn có thể điền link ảnh online hoặc tên file ảnh cùng thư mục (ví dụ: "anh-ban.jpg" hoặc "https://...")
+            // - Hoặc để trống "" và chạm trực tiếp vào hình tròn trên thiệp (hoặc bấm nút "📸 Chọn ảnh từ máy") để chọn ảnh từ điện thoại/máy tính!
+            photoUrl: "hanbi.png",
+
+            // Kiểu hiển thị ảnh:
+            // - "avatar": Ảnh tròn đại diện sang trọng ở đầu thiệp (thay thế bánh kem)
+            // - "frame": Khung ảnh kỷ niệm trang nhã đặt ở giữa thiệp
+            photoLayout: "avatar",
+
+            // 4. Nội dung lời chúc sinh nhật (Mỗi phần tử trong mảng là 1 đoạn văn)
+            messages: [
+                "Chúc mừng ngày đặc biệt nhất trong năm của bạn! Mong rằng tuổi mới sẽ mang đến cho bạn thật nhiều sức khỏe, niềm vui trọn vẹn và những nụ cười rạng rỡ mỗi ngày.",
+                "Cảm ơn bạn vì đã luôn là một người tuyệt vời. Chúc mọi dự định, ước mơ ấp ủ của bạn trong năm nay đều sớm trở thành hiện thực rực rỡ nhất!",
+                "Happy Birthday! Hãy tận hưởng ngày hôm nay thật trọn vẹn và hạnh phúc nhé! 🥂🎂"
+            ],
+
+            // 5. Tên người gửi ở cuối thiệp
+            sender: "Người bạn luôn quý mến bạn ✨"
+        };
+        /** ================================================================= */
+
+
+        // Lấy các phần tử DOM cần thiết
+        const lockScreen = document.getElementById('lockScreen');
+        const lockCard = document.getElementById('lockCard');
+        const passwordInput = document.getElementById('passwordInput');
+        const unlockBtn = document.getElementById('unlockBtn');
+        const errorMsg = document.getElementById('errorMsg');
+
+        const envelopeStage = document.getElementById('envelopeStage');
+        const envelopeBox = document.getElementById('envelopeBox');
+        const cardStage = document.getElementById('cardStage');
+        const printableCard = document.getElementById('printableCard');
+
+        const cardRecipient = document.getElementById('cardRecipient');
+        const cardMessage = document.getElementById('cardMessage');
+        const cardSender = document.getElementById('cardSender');
+
+        // Các phần tử ảnh và bánh sinh nhật
+        const avatarPhotoContainer = document.getElementById('avatarPhotoContainer');
+        const cakeBadge = document.getElementById('cakeBadge');
+        const avatarPhotoWrapper = document.getElementById('avatarPhotoWrapper');
+        const avatarPhotoImg = document.getElementById('avatarPhotoImg');
+
+        const framePhotoContainer = document.getElementById('framePhotoContainer');
+        const framePhotoImg = document.getElementById('framePhotoImg');
+
+        const photoInput = document.getElementById('photoInput');
+        const choosePhotoBtn = document.getElementById('choosePhotoBtn');
+        const choosePhotoText = document.getElementById('choosePhotoText');
+        const photoLayoutBtn = document.getElementById('photoLayoutBtn');
+        const photoLayoutText = document.getElementById('photoLayoutText');
+        const removePhotoBtn = document.getElementById('removePhotoBtn');
+
+        const downloadBtn = document.getElementById('downloadBtn');
+        const downloadBtnText = document.getElementById('downloadBtnText');
+        const replayBtn = document.getElementById('replayBtn');
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeToggleText = document.getElementById('themeToggleText');
+        const toastMsg = document.getElementById('toastMsg');
+
+        const imageModal = document.getElementById('imageModal');
+        const previewImage = document.getElementById('previewImage');
+        const modalDownloadLink = document.getElementById('modalDownloadLink');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const closeModalBtn2 = document.getElementById('closeModalBtn2');
+
+        // Quản lý phong cách màu thiệp ('luxury' = Đỏ Hoàng Gia, 'classic' = Đỏ Nền Kem)
+        let currentTheme = 'luxury';
+
+        function updateCardTheme(theme) {
+            currentTheme = theme;
+            if (theme === 'luxury') {
+                printableCard.classList.remove('theme-classic');
+                printableCard.classList.add('theme-luxury');
+                themeToggleText.textContent = 'Đổi sang Nền Kem';
+            } else {
+                printableCard.classList.remove('theme-luxury');
+                printableCard.classList.add('theme-classic');
+                themeToggleText.textContent = 'Đổi sang Đỏ Hoàng Gia';
+            }
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            const nextTheme = currentTheme === 'luxury' ? 'classic' : 'luxury';
+            updateCardTheme(nextTheme);
+        });
+
+        // =====================================================================
+        // XỬ LÝ ẢNH KỶ NIỆM (CHÈN ẢNH VÀO THIỆP)
+        // =====================================================================
+        function applyPhotoDisplay(photoUrl, layout) {
+            if (!photoUrl || photoUrl.trim() === '') {
+                // Chưa có ảnh -> hiện bánh sinh nhật mặc định
+                cakeBadge.classList.remove('hidden');
+                avatarPhotoWrapper.classList.add('hidden');
+                framePhotoContainer.classList.add('hidden');
+
+                choosePhotoText.textContent = 'Chọn ảnh từ máy';
+                photoLayoutBtn.classList.add('hidden');
+                removePhotoBtn.classList.add('hidden');
+                return;
+            }
+
+            // Đã có ảnh
+            choosePhotoText.textContent = 'Đổi ảnh khác';
+            photoLayoutBtn.classList.remove('hidden');
+            removePhotoBtn.classList.remove('hidden');
+
+            if (layout === 'frame') {
+                // Kiểu Khung ảnh kỷ niệm giữa thiệp
+                cakeBadge.classList.remove('hidden'); // Giữ bánh kem nhỏ ở trên
+                avatarPhotoWrapper.classList.add('hidden');
+
+                framePhotoContainer.classList.remove('hidden');
+                framePhotoImg.src = photoUrl;
+                photoLayoutText.textContent = 'Đổi sang Ảnh tròn';
+            } else {
+                // Kiểu Ảnh đại diện tròn ở đầu thiệp
+                cakeBadge.classList.add('hidden'); // Thay thế bánh kem
+                avatarPhotoWrapper.classList.remove('hidden');
+                avatarPhotoImg.src = photoUrl;
+
+                framePhotoContainer.classList.add('hidden');
+                photoLayoutText.textContent = 'Đổi sang Khung ảnh';
+            }
+        }
+
+        // Kích hoạt chọn file ảnh khi bấm các vị trí trên giao diện
+        function triggerPhotoSelect() {
+            photoInput.click();
+        }
+
+        avatarPhotoContainer.addEventListener('click', triggerPhotoSelect);
+        framePhotoContainer.addEventListener('click', triggerPhotoSelect);
+        choosePhotoBtn.addEventListener('click', triggerPhotoSelect);
+
+        // Sự kiện khi người dùng chọn xong file ảnh từ máy/điện thoại
+        photoInput.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const base64Url = event.target.result;
+                    CARD_CONFIG.photoUrl = base64Url;
+                    applyPhotoDisplay(CARD_CONFIG.photoUrl, CARD_CONFIG.photoLayout);
+
+                    // Bắn một chùm pháo hoa chúc mừng đã chèn ảnh thành công
+                    confetti({
+                        particleCount: 35,
+                        spread: 60,
+                        origin: { y: 0.5 },
+                        colors: ['#fde047', '#dc2626', '#ffffff']
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Chuyển đổi giữa Kiểu ảnh tròn và Khung ảnh kỷ niệm
+        photoLayoutBtn.addEventListener('click', () => {
+            CARD_CONFIG.photoLayout = CARD_CONFIG.photoLayout === 'avatar' ? 'frame' : 'avatar';
+            applyPhotoDisplay(CARD_CONFIG.photoUrl, CARD_CONFIG.photoLayout);
+        });
+
+        // Xóa ảnh (quay lại icon bánh kem)
+        removePhotoBtn.addEventListener('click', () => {
+            CARD_CONFIG.photoUrl = '';
+            photoInput.value = '';
+            applyPhotoDisplay('', CARD_CONFIG.photoLayout);
+        });
+
+
+        // Đổ dữ liệu cấu hình vào giao diện tấm thiệp (Gán kèm class tracking-wide chống dính chữ)
+        function initCardContent() {
+            cardRecipient.textContent = CARD_CONFIG.recipient;
+            cardSender.textContent = CARD_CONFIG.sender;
+
+            cardMessage.innerHTML = '';
+            CARD_CONFIG.messages.forEach(paragraph => {
+                const p = document.createElement('p');
+                p.textContent = paragraph;
+                p.className = 'tracking-wide leading-relaxed';
+                cardMessage.appendChild(p);
+            });
+
+            // Nạp ảnh ban đầu (nếu có cấu hình trong CARD_CONFIG.photoUrl)
+            applyPhotoDisplay(CARD_CONFIG.photoUrl, CARD_CONFIG.photoLayout);
+        }
+
+        // Hiệu ứng bắn pháo hoa / hoa giấy rực rỡ tông đỏ & vàng kim
+        function fireBirthdayConfetti() {
+            const duration = 2800;
+            const end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 5,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0, y: 0.7 },
+                    colors: ['#dc2626', '#ef4444', '#f59e0b', '#fbbf24', '#ffd700']
+                });
+                confetti({
+                    particleCount: 5,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1, y: 0.7 },
+                    colors: ['#dc2626', '#ef4444', '#f59e0b', '#fbbf24', '#ffd700']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+
+            confetti({
+                particleCount: 80,
+                spread: 80,
+                origin: { y: 0.6 },
+                colors: ['#b91c1c', '#dc2626', '#f59e0b', '#ffd700', '#ffffff']
+            });
+        }
+
+        // Chuỗi chuyển động: Phong bì bay ra -> Mở nắp -> Trượt thiệp -> Phóng to thiệp
+        function playEnvelopeSequence() {
+            lockScreen.classList.add('hidden');
+            cardStage.classList.add('hidden');
+            envelopeStage.classList.remove('hidden');
+
+            envelopeBox.classList.remove('open', 'animate-fly-in');
+            void envelopeBox.offsetWidth; // Trigger reflow
+
+            // Bước 1: Phong bì đỏ bay từ dưới lên
+            envelopeBox.classList.add('animate-fly-in');
+
+            // Bước 2: Sau 1.1s, mở nắp nến và rút thiệp lên
+            setTimeout(() => {
+                envelopeBox.classList.add('open');
+                fireBirthdayConfetti();
+            }, 1150);
+
+            // Bước 3: Sau 2.3s, chuyển mượt sang tấm thiệp đỏ hoàn chỉnh
+            setTimeout(() => {
+                envelopeStage.classList.add('hidden');
+                cardStage.classList.remove('hidden');
+                cardStage.classList.add('animate-card-expand');
+            }, 2350);
+        }
+
+        // Kiểm tra mật khẩu khi người dùng bấm nút hoặc nhấn Enter
+        function handleUnlock() {
+            const entered = passwordInput.value.trim();
+            if (entered === CARD_CONFIG.password) {
+                errorMsg.classList.add('hidden');
+                playEnvelopeSequence();
+            } else {
+                errorMsg.classList.remove('hidden');
+                lockCard.classList.remove('animate-shake');
+                void lockCard.offsetWidth;
+                lockCard.classList.add('animate-shake');
+                passwordInput.focus();
+                passwordInput.select();
+            }
+        }
+
+        unlockBtn.addEventListener('click', handleUnlock);
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleUnlock();
+            }
+        });
+
+        passwordInput.addEventListener('input', () => {
+            if (!errorMsg.classList.contains('hidden')) {
+                errorMsg.classList.add('hidden');
+            }
+        });
+
+        replayBtn.addEventListener('click', () => {
+            cardStage.classList.remove('animate-card-expand');
+            playEnvelopeSequence();
+        });
+
+        // Xử lý đóng Popup ảnh
+        function closeImageModal() {
+            imageModal.classList.add('hidden');
+        }
+        closeModalBtn.addEventListener('click', closeImageModal);
+        closeModalBtn2.addEventListener('click', closeImageModal);
+        imageModal.addEventListener('click', (e) => {
+            if (e.target === imageModal) {
+                closeImageModal();
+            }
+        });
+
+        // =====================================================================
+        // SỰ KIỆN NÚT "TẢI ẢNH THIỆP VỀ MÁY"
+        // Đã khắc phục triệt để lỗi dính chữ trên điện thoại:
+        // 1. Chờ document.fonts.ready để webfont nạp xong 100%.
+        // 2. Ép letterSpacing & wordSpacing trong hook onclone của html2canvas.
+        // 3. Tạm ẩn các nút icon gợi ý camera (.no-export) để thiệp sạch đẹp.
+        // 4. Hiện Popup để người dùng iPhone/Android có thể nhấn giữ lưu ảnh trực tiếp.
+        // =====================================================================
+        downloadBtn.addEventListener('click', async () => {
+            const cardElement = document.getElementById('printableCard');
+            const originalText = downloadBtnText.textContent;
+
+            try {
+                downloadBtnText.textContent = 'Đang tạo ảnh...';
+                downloadBtn.disabled = true;
+
+                // 1. Chờ tất cả font chữ (Quicksand, Dancing Script) tải xong hoàn tất
+                if (document.fonts) {
+                    await document.fonts.ready;
+                }
+
+                // Chờ thêm 100ms để trình duyệt điện thoại hoàn tất bố cục văn bản
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                // 2. Chụp khung tấm thiệp với scale: 2 (sắc nét gấp đôi)
+                const canvas = await html2canvas(cardElement, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: null,
+                    logging: false,
+                    // Hook can thiệp vào bản sao DOM ảo của html2canvas trước khi vẽ
+                    onclone: (clonedDoc) => {
+                        const clonedCard = clonedDoc.getElementById('printableCard');
+                        if (clonedCard) {
+                            clonedCard.style.letterSpacing = '0.025em';
+                            clonedCard.style.wordSpacing = '1.2px';
+
+                            // Bảo đảm mọi thẻ chữ con đều có khoảng cách ký tự rõ ràng
+                            const textElements = clonedCard.querySelectorAll('h2, p, span, div');
+                            textElements.forEach(el => {
+                                el.style.letterSpacing = '0.025em';
+                                el.style.wordSpacing = '1.2px';
+                            });
+
+                            // Xử lý riêng cho font viết tay nghệ thuật
+                            const handwritingElements = clonedCard.querySelectorAll('.font-handwriting');
+                            handwritingElements.forEach(el => {
+                                el.style.letterSpacing = '0.02em';
+                                el.style.wordSpacing = '2px';
+                            });
+
+                            // Ẩn các badge icon gợi ý camera khi xuất ảnh
+                            const noExports = clonedDoc.querySelectorAll('.no-export');
+                            noExports.forEach(el => {
+                                el.style.display = 'none';
+                            });
+                        }
+                    }
+                });
+
+                // 3. Tạo link dữ liệu ảnh PNG
+                const imageURL = canvas.toDataURL('image/png');
+
+                // 4. Kích hoạt tự động tải xuống
+                const downloadLink = document.createElement('a');
+                downloadLink.href = imageURL;
+                downloadLink.download = 'thiep-sinh-nhat.png';
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+
+                // 5. Cập nhật ảnh vào Popup và mở Popup để hỗ trợ tối đa cho điện thoại
+                previewImage.src = imageURL;
+                modalDownloadLink.href = imageURL;
+                imageModal.classList.remove('hidden');
+
+                // 6. Hiển thị toast thông báo nhẹ nhàng
+                toastMsg.classList.remove('opacity-0');
+                setTimeout(() => {
+                    toastMsg.classList.add('opacity-0');
+                }, 3500);
+
+            } catch (err) {
+                console.error('Lỗi khi xuất ảnh thiệp:', err);
+                toastMsg.textContent = 'Có lỗi nhỏ khi tạo ảnh, bạn hãy thử lại nhé!';
+                toastMsg.classList.remove('opacity-0');
+            } finally {
+                downloadBtnText.textContent = originalText;
+                downloadBtn.disabled = false;
+            }
+        });
+
+        // Khởi tạo nội dung khi trang tải xong
+        window.addEventListener('DOMContentLoaded', () => {
+            initCardContent();
+            updateCardTheme('luxury');
+        });
+    </script>
+</body>
+
+</html>
